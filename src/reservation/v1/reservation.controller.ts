@@ -36,7 +36,7 @@ export async function getReservation(req: AuthRequest, res: Response) {
     const reservationId = req.params.id;
     const reservation = await reservationActions.getReservationAction(reservationId);
     if (reservation) {
-      if (reservation.userId !== req.user!.userId && !req.user!.permissions.includes('getReservations')) {
+      if (reservation.userId !== req.user!.userId && !req.user!.permissions.includes('readReservations')) {
         return res.status(403).json({ message: "You don't have permission to view this reservation" });
       }
       res.status(200).json({ message: "Reservation retrieved successfully", reservation });
@@ -70,7 +70,7 @@ export async function returnReservation(req: AuthRequest, res: Response) {
     const reservationId = req.params.id;
     const returnedReservation = await reservationActions.returnReservationAction(reservationId);
     if (returnedReservation) {
-      if (returnedReservation.userId !== req.user!.userId && !req.user!.permissions.includes('returnReservations')) {
+      if (returnedReservation.userId !== req.user!.userId && !req.user!.permissions.includes('deleteReservations')) {
         return res.status(403).json({ message: "You don't have permission to return this reservation" });
       }
       res.status(200).json({ message: "Book returned successfully", reservation: returnedReservation });

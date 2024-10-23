@@ -8,6 +8,5 @@ router.get('/books', controllers.getBooks);
 router.get('/books/:id', controllers.getBook);
 router.put('/books/:id', authenticateUser, authorizeUser(['updateBooks']), controllers.updateBook);
 router.delete('/books/:id', authenticateUser, authorizeUser(['deleteBooks']), controllers.softDeleteBook);
-//router.post('/books/reserve', authenticateUser, controllers.reserveBook);
 
 export default router;
