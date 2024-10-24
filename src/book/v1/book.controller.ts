@@ -12,7 +12,7 @@ interface AuthRequest extends Request {
 export async function softDeleteBook(req: AuthRequest, res: Response) {
   try {
     if (!req.user?.permissions.includes('deleteBooks')) {
-      return res.status(403).json({ message: "You don't have permission to delete books" });
+      return res.status(403).json({ message: "Insufficient permissions" });
     }
 
     const bookId = req.params.id;
@@ -30,7 +30,7 @@ export async function softDeleteBook(req: AuthRequest, res: Response) {
 export async function createBook(req: AuthRequest, res: Response) {
   try {
     if (!req.user?.permissions.includes('createBooks')) {
-      return res.status(403).json({ message: "You don't have permission to create books" });
+      return res.status(403).json({ message: "Insufficient permissions" });
     }
 
     const book = await bookActions.createBookAction(req.body);
@@ -69,7 +69,7 @@ export async function getBook(req: Request, res: Response) {
 export async function updateBook(req: AuthRequest, res: Response) {
   try {
     if (!req.user?.permissions.includes('updateBooks')) {
-      return res.status(403).json({ message: "You don't have permission to update books" });
+      return res.status(403).json({ message: "Insufficient permissions" });
     }
 
     const bookId = req.params.id;
@@ -77,7 +77,7 @@ export async function updateBook(req: AuthRequest, res: Response) {
     if (updatedBook) {
       res.status(200).json({ message: "Book updated successfully", book: updatedBook });
     } else {
-      res.status(404).json({ message: "Book not found or inactive" });
+      res.status(404).json({ message: "Book not found" });
     }
   } catch (error) {
     res.status(500).json({ message: "Error updating book", error });

@@ -15,7 +15,7 @@ export async function softDeleteUser(req: AuthRequest, res: Response) {
     const userId = req.params.id;
     
     if (userId !== req.user!.userId && !req.user!.permissions.includes('deleteUsers')) {
-      return res.status(403).json({ message: "You don't have permission to delete this user" });
+      return res.status(403).json({ message: "Insufficient permissions" });
     }
 
     const deletedUser = await userActions.softDeleteUserAction(userId);
@@ -63,13 +63,13 @@ export async function updateUser(req: AuthRequest, res: Response) {
   try {
     const userId = req.params.id;
     if (userId !== req.user!.userId && !req.user!.permissions.includes('updateUsers')) {
-      return res.status(403).json({ message: "You don't have permission to modify this user" });
+      return res.status(403).json({ message: "Insufficient permissions" });
     }
     const updatedUser = await userActions.updateUserAction(userId, req.body);
     if (updatedUser) {
       res.status(200).json({ message: "User updated successfully", user: updatedUser });
     } else {
-      res.status(404).json({ message: "User not found or inactive" });
+      res.status(404).json({ message: "User not found" });
     }
   } catch (error) {
     res.status(500).json({ message: "Error updating user", error });

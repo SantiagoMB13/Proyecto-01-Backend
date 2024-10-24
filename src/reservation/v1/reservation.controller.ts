@@ -37,7 +37,7 @@ export async function getReservation(req: AuthRequest, res: Response) {
     const reservation = await reservationActions.getReservationAction(reservationId);
     if (reservation) {
       if (reservation.userId !== req.user!.userId && !req.user!.permissions.includes('readReservations')) {
-        return res.status(403).json({ message: "You don't have permission to view this reservation" });
+        return res.status(403).json({ message: "Insufficient permissions" });
       }
       res.status(200).json({ message: "Reservation retrieved successfully", reservation });
     } else {
@@ -54,7 +54,7 @@ export async function updateReservation(req: AuthRequest, res: Response) {
     const updatedReservation = await reservationActions.updateReservationAction(reservationId, req.body);
     if (updatedReservation) {
       if (updatedReservation.userId !== req.user!.userId && !req.user!.permissions.includes('updateReservations')) {
-        return res.status(403).json({ message: "You don't have permission to update this reservation" });
+        return res.status(403).json({ message: "Insufficient permissions" });
       }
       res.status(200).json({ message: "Reservation updated successfully", reservation: updatedReservation });
     } else {
@@ -71,7 +71,7 @@ export async function returnReservation(req: AuthRequest, res: Response) {
     const returnedReservation = await reservationActions.returnReservationAction(reservationId);
     if (returnedReservation) {
       if (returnedReservation.userId !== req.user!.userId && !req.user!.permissions.includes('deleteReservations')) {
-        return res.status(403).json({ message: "You don't have permission to return this reservation" });
+        return res.status(403).json({ message: "Insufficient permissions" });
       }
       res.status(200).json({ message: "Book returned successfully", reservation: returnedReservation });
     } else {
