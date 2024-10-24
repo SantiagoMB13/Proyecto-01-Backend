@@ -5,17 +5,18 @@ import { Schema } from 'mongoose';
 interface AuthRequest extends Request {
   user?: {
     userId: Schema.Types.ObjectId;
-    userName: string;
     permissions: string[];
   };
 }
 
 export async function createReservation(req: AuthRequest, res: Response) {
   try {
-    const userId = req.user!.userId;
-    const userName = req.user!.userName;
-    const bookId = req.body.bookID;
-    const reservation = await reservationActions.createReservationAction({userId, userName, bookId});
+    let userId = req.user!.userId;
+    if (req.body.userId){
+      userId = req.body.userId;
+    }
+    const bookId = req.body.bookId;
+    const reservation = await reservationActions.createReservationAction({userId, bookId});
     res.status(201).json({ message: "Reservation created successfully", reservation });
   } catch (error) {
     res.status(500).json({ message: "Error creating reservation", error });
@@ -36,10 +37,12 @@ export async function getReservation(req: AuthRequest, res: Response) {
     const reservationId = req.params.id;
     const reservation = await reservationActions.getReservationAction(reservationId);
     if (reservation) {
-      if (reservation.userId !== req.user!.userId && !req.user!.permissions.includes('readReservations')) {
+      
+      if (reservation.userId.toString() !== req.user!.userId.toString() && !req.user!.permissions.includes('readReservations')) {
         return res.status(403).json({ message: "Insufficient permissions" });
       }
-      res.status(200).json({ message: "Reservation retrieved successfully", reservation });
+      const outputreservation = reservation.toObject();
+      res.status(200).json({ message: "Reservation retrieved successfully", outputreservation });
     } else {
       res.status(404).json({ message: "Reservation not found" });
     }
@@ -53,7 +56,7 @@ export async function updateReservation(req: AuthRequest, res: Response) {
     const reservationId = req.params.id;
     const updatedReservation = await reservationActions.updateReservationAction(reservationId, req.body);
     if (updatedReservation) {
-      if (updatedReservation.userId !== req.user!.userId && !req.user!.permissions.includes('updateReservations')) {
+      if (updatedReservation.userId.toString() !== req.user!.userId.toString() && !req.user!.permissions.includes('updateReservations')) {
         return res.status(403).json({ message: "Insufficient permissions" });
       }
       res.status(200).json({ message: "Reservation updated successfully", reservation: updatedReservation });
@@ -70,7 +73,7 @@ export async function returnReservation(req: AuthRequest, res: Response) {
     const reservationId = req.params.id;
     const returnedReservation = await reservationActions.returnReservationAction(reservationId);
     if (returnedReservation) {
-      if (returnedReservation.userId !== req.user!.userId && !req.user!.permissions.includes('deleteReservations')) {
+      if (returnedReservation.userId.toString() !== req.user!.userId.toString() && !req.user!.permissions.includes('deleteReservations')) {
         return res.status(403).json({ message: "Insufficient permissions" });
       }
       res.status(200).json({ message: "Book returned successfully", reservation: returnedReservation });

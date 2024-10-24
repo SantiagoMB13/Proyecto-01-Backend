@@ -27,7 +27,7 @@ export async function createReservationAction(reservationData: Partial<IReservat
     }).session(session);
 
     if (!user) {
-      throw new Error('User not found or inactive');
+      throw new Error('User not found');
     }
 
     // Crear la nueva reservación
@@ -52,7 +52,7 @@ export async function createReservationAction(reservationData: Partial<IReservat
     await user.save({ session });
 
     await session.commitTransaction();
-    return savedReservation;
+    return savedReservation.toObject();
 
   } catch (error) {
     await session.abortTransaction();
@@ -67,18 +67,64 @@ export async function getReservationAction(reservationId: string): Promise<IRese
 }
 
 export async function getReservationsAction(filter: Partial<IReservation> = {}): Promise<IReservation[]> {
-  return await Reservation.find(filter as FilterQuery<IReservation>);
+  const reservations = await Reservation.find(filter as FilterQuery<IReservation>);
+  return reservations.map(reservation => reservation.toObject());
 }
 
 export async function updateReservationAction(
   reservationId: string, 
   updateData: Partial<IReservation>
 ): Promise<IReservation | null> {
-  return await Reservation.findByIdAndUpdate(
-    reservationId,
-    { $set: updateData },
-    { new: true }
-  );
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Encontrar y actualizar la reservación
+    const updatedReservation = await Reservation.findByIdAndUpdate(
+      reservationId,
+      { $set: updateData },
+      { new: true, session }
+    );
+
+    if (!updatedReservation) {
+      throw new Error('Reservation not found');
+    }
+
+    // Actualizar el historial en el libro
+    const book = await Book.findById(updatedReservation.bookId).session(session);
+    if (!book) {
+      throw new Error('Associated book not found');
+    }
+
+    book.reservationHistory = book.reservationHistory.map((entry: any) =>
+      entry._id.toString() === reservationId
+        ? updatedReservation.toObject()
+        : entry
+    );
+    await book.save({ session });
+
+    // Actualizar el historial en el usuario
+    const user = await User.findById(updatedReservation.userId).session(session);
+    if (!user) {
+      throw new Error('Associated user not found');
+    }
+
+    user.reservationHistory = user.reservationHistory.map((entry: any) =>
+      entry._id.toString() === reservationId
+        ? updatedReservation.toObject()
+        : entry
+    );
+    await user.save({ session });
+
+    await session.commitTransaction();
+    return updatedReservation.toObject();
+
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
 }
 
 export async function returnReservationAction(reservationId: string): Promise<IReservation | null> {
@@ -93,7 +139,7 @@ export async function returnReservationAction(reservationId: string): Promise<IR
     }).session(session);
 
     if (!reservation) {
-      throw new Error('Active reservation not found');
+      return null;
     }
 
     const returnDate = new Date();
@@ -109,8 +155,8 @@ export async function returnReservationAction(reservationId: string): Promise<IR
     }
 
     book.isAvailable = true;
-    book.reservationHistory = book.reservationHistory.map(entry =>
-      entry._id === reservationId
+    book.reservationHistory = book.reservationHistory.map((entry: any) =>
+      entry._id.toString() === reservationId
         ? { ...entry.toObject(), returnDate }
         : entry
     );
@@ -122,15 +168,15 @@ export async function returnReservationAction(reservationId: string): Promise<IR
       throw new Error('Associated user not found');
     }
 
-    user.reservationHistory = user.reservationHistory.map(entry =>
-      entry._id === reservationId
+    user.reservationHistory = user.reservationHistory.map((entry: any) =>
+      entry._id.toString() === reservationId
         ? { ...entry.toObject(), returnDate }
         : entry
     );
     await user.save({ session });
 
     await session.commitTransaction();
-    return reservation;
+    return reservation.toObject();
 
   } catch (error) {
     await session.abortTransaction();
