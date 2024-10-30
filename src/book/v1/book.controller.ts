@@ -11,10 +11,6 @@ interface AuthRequest extends Request {
 
 export async function softDeleteBook(req: AuthRequest, res: Response) {
   try {
-    if (!req.user?.permissions.includes('deleteBooks')) {
-      return res.status(403).json({ message: "Insufficient permissions" });
-    }
-
     const bookId = req.params.id;
     const deletedBook = await bookActions.softDeleteBookAction(bookId);
     if (deletedBook) {
@@ -29,10 +25,6 @@ export async function softDeleteBook(req: AuthRequest, res: Response) {
 
 export async function createBook(req: AuthRequest, res: Response) {
   try {
-    if (!req.user?.permissions.includes('createBooks')) {
-      return res.status(403).json({ message: "Insufficient permissions" });
-    }
-
     const book = await bookActions.createBookAction(req.body);
     res.status(201).json({ message: "Book created successfully", book });
   } catch (error) {
@@ -68,10 +60,6 @@ export async function getBook(req: Request, res: Response) {
 
 export async function updateBook(req: AuthRequest, res: Response) {
   try {
-    if (!req.user?.permissions.includes('updateBooks')) {
-      return res.status(403).json({ message: "Insufficient permissions" });
-    }
-
     const bookId = req.params.id;
     const updatedBook = await bookActions.updateBookAction(bookId, req.body);
     if (updatedBook) {

@@ -1,6 +1,23 @@
 import { Book, IBook } from './book.model';
 import { FilterQuery } from 'mongoose';
 
+// Helper function to filter out inactive reservations and clean reservation data
+function filterAndCleanReservations(book: any): Partial<IBook> {
+  const bookObject = book.toObject();
+  const { isActive, ...bookWithoutIsActive } = bookObject;
+  
+  if (bookWithoutIsActive.reservationHistory) {
+    bookWithoutIsActive.reservationHistory = bookWithoutIsActive.reservationHistory
+      .filter((reservation: any) => reservation.isActive)
+      .map((reservation: any) => {
+        const { isActive, ...reservationWithoutIsActive } = reservation;
+        return reservationWithoutIsActive;
+      });
+  }
+  
+  return bookWithoutIsActive;
+}
+
 export async function createBookAction(bookData: Partial<IBook>): Promise<Partial<IBook>> {
   const newBook = new Book({
     title: bookData.title,
@@ -14,9 +31,7 @@ export async function createBookAction(bookData: Partial<IBook>): Promise<Partia
   });
 
   await newBook.save();
-  const bookObject = newBook.toObject();
-  const { isActive, ...bookWithoutIsActive } = bookObject;
-  return bookWithoutIsActive;
+  return filterAndCleanReservations(newBook);
 }
 
 export async function getBookAction(
@@ -31,9 +46,7 @@ export async function getBookAction(
   const book = await Book.findOne(query);
   if (!book) return null;
 
-  const bookObject = book.toObject();
-  const { isActive, ...bookWithoutIsActive } = bookObject;
-  return bookWithoutIsActive;
+  return filterAndCleanReservations(book);
 }
 
 export async function getBooksAction(
@@ -46,11 +59,7 @@ export async function getBooksAction(
   }
 
   const books = await Book.find(query);
-  return books.map(book => {
-    const bookObject = book.toObject();
-    const { isActive, ...bookWithoutIsActive } = bookObject;
-    return bookWithoutIsActive;
-  });
+  return books.map(book => filterAndCleanReservations(book));
 }
 
 export async function updateBookAction(
@@ -65,9 +74,7 @@ export async function updateBookAction(
 
   if (!book) return null;
 
-  const bookObject = book.toObject();
-  const { isActive, ...bookWithoutIsActive } = bookObject;
-  return bookWithoutIsActive;
+  return filterAndCleanReservations(book);
 }
 
 export async function softDeleteBookAction(bookId: string): Promise<IBook | null> {

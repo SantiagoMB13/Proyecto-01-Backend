@@ -7,6 +7,7 @@ export interface IReservation extends Document {
   bookName: string;
   reservationDate: Date;
   returnDate: Date | null;
+  isActive: boolean;
 }
 
 const ReservationSchema = new Schema({
@@ -15,7 +16,8 @@ const ReservationSchema = new Schema({
   bookId: { type: Schema.Types.ObjectId, ref: 'Book', required: true },
   bookName: { type: String, required: true },
   reservationDate: { type: Date, required: true },
-  returnDate: { type: Date, default: null }
+  returnDate: { type: Date, default: null },
+  isActive: { type: Boolean, default: true }
 }, {
   timestamps: true, 
   toObject: {
