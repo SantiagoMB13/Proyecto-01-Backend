@@ -1,5 +1,8 @@
 import { Request, Response } from 'express';
-import * as userActions from './user.actions';
+import * as CreateUserActions from './create.user.action';
+import * as ReadUserActions from './read.user.action';
+import * as UpdateUserActions from './update.user.action';
+import * as DeleteUserActions from './delete.user.action';
 import { Schema } from 'mongoose';
 
 interface AuthRequest extends Request {
@@ -18,7 +21,7 @@ export async function softDeleteUser(req: AuthRequest, res: Response) {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
 
-    const deletedUser = await userActions.softDeleteUserAction(userId);
+    const deletedUser = await DeleteUserActions.softDeleteUserAction(userId);
     if (deletedUser) {
       res.status(200).json({ message: "User deleted successfully" });
     } else {
@@ -31,7 +34,7 @@ export async function softDeleteUser(req: AuthRequest, res: Response) {
 
 export async function registerUser(req: Request, res: Response) {
   try {
-    const user = await userActions.createUserAction(req.body);
+    const user = await CreateUserActions.createUserAction(req.body);
     res.status(201).json({ message: "User created successfully", user });
   } catch (error) {
     if ((error as any).code === 11000) {
@@ -46,7 +49,7 @@ export async function loginUser(req: Request, res: Response) {
   try {
     const includeInactiveInput = req.query.includeInactive === 'true';
     const { email, password } = req.body;
-    const result = await userActions.loginUserAction(email, password, includeInactiveInput);
+    const result = await ReadUserActions.loginUserAction(email, password, includeInactiveInput);
     if (result) {
       const { token, user } = result;
       res.status(200).json({ message: "Login successful", token, user });
@@ -65,7 +68,7 @@ export async function updateUser(req: AuthRequest, res: Response) {
     if (userId !== req.user!.userId && !req.user!.permissions.includes('updateUsers')) {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
-    const updatedUser = await userActions.updateUserAction(userId, req.body);
+    const updatedUser = await UpdateUserActions.updateUserAction(userId, req.body);
     if (updatedUser) {
       res.status(200).json({ message: "User updated successfully", user: updatedUser });
     } else {
@@ -80,7 +83,7 @@ export async function getUsers(req: Request, res: Response) {
   try {
     const includeInactiveInput = req.query.includeInactive === 'true';
     const { includeInactive, ...queries } = req.query;
-    const users = await userActions.getUsersAction(queries as any, includeInactiveInput);
+    const users = await ReadUserActions.getUsersAction(queries as any, includeInactiveInput);
     res.status(200).json({ message: "Users retrieved successfully", users });
   } catch (error) {
     res.status(500).json({ message: "Error retrieving users", error });

@@ -6,7 +6,7 @@ const router = Router();
 router.post('/books', authenticateUser, authorizeUser(['createBooks']), controllers.createBook);
 router.get('/books', controllers.getBooks);
 router.get('/books/:id', controllers.getBook);
-router.put('/books/:id', authenticateUser, authorizeUser(['updateBooks']), controllers.updateBook);
+router.put('/books/:id', authenticateUser, controllers.updateBook);
 router.delete('/books/:id', authenticateUser, authorizeUser(['deleteBooks']), controllers.softDeleteBook);
 
 export default router;
