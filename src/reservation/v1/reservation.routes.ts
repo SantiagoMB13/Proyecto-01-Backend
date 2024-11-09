@@ -17,6 +17,9 @@ async function CreateReservation(req: AuthRequest, res: Response) {
     }
 
     const reservation = await controller.createReservation(userId, bodyUserId, req.body.bookId);
+    if (reservation instanceof Error) {
+        return res.status(400).json({ message: reservation.message });
+    }
     res.status(201).json({ 
       message: "Reservation created successfully", 
       reservation 
@@ -99,6 +102,9 @@ async function UpdateReservation(req: AuthRequest, res: Response) {
     }
 
     const updatedReservation = await controller.updateReservation(reservationId, req.body, includeInactive);
+    if (updatedReservation instanceof Error) {
+        return res.status(400).json({ message: updatedReservation.message });
+    }
     res.status(200).json({ 
       message: "Reservation updated successfully", 
       reservation: updatedReservation 
@@ -126,6 +132,9 @@ async function ReturnReservation(req: AuthRequest, res: Response) {
     }
 
     const returnedReservation = await controller.returnReservation(reservationId, includeInactive);
+    if (returnedReservation instanceof Error) {
+        return res.status(400).json({ message: returnedReservation.message });
+    }
     res.status(200).json({ 
       message: "Book returned successfully", 
       reservation: returnedReservation 
@@ -152,6 +161,9 @@ async function DeleteReservation(req: AuthRequest, res: Response) {
     }
 
     const deletedReservation = await controller.softDeleteReservation(reservationId);
+    if (deletedReservation instanceof Error) {
+        return res.status(400).json({ message: deletedReservation.message });
+    }
     res.status(200).json({ 
       message: "Reservation deleted successfully", 
       reservation: deletedReservation 

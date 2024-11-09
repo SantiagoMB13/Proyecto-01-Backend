@@ -10,30 +10,46 @@ interface User {
 }
 
 export async function createReservation(userId: Schema.Types.ObjectId, bodyUserId: Schema.Types.ObjectId | undefined, bookId: Schema.Types.ObjectId) {
-  const finalUserId = bodyUserId || userId;
-  return await CreateReservationActions.createReservationAction({ userId: finalUserId, bookId });
+  try {
+    const finalUserId = bodyUserId || userId;
+    return await CreateReservationActions.createReservationAction({ userId: finalUserId, bookId });
+  } catch (error) {
+    return error;
+  }
 }
 
 export async function getReservations(queries: any, includeInactive: boolean) {
-  return await ReadReservationActions.getReservationsAction(queries, includeInactive);
+    return await ReadReservationActions.getReservationsAction(queries, includeInactive);
 }
 
 export async function getReservation(reservationId: string, includeInactive: boolean) {
-  return await ReadReservationActions.getReservationAction(reservationId, includeInactive);
+    return await ReadReservationActions.getReservationAction(reservationId, includeInactive);
 }
 
 export async function updateReservation(reservationId: string, updateData: any, includeInactive: boolean) {
-  return await UpdateReservationActions.updateReservationAction(reservationId, updateData, includeInactive);
+  try {
+    return await UpdateReservationActions.updateReservationAction(reservationId, updateData, includeInactive);
+  } catch (error) {
+    return error;
+  }
 }
 
 export async function returnReservation(reservationId: string, includeInactive: boolean) {
-  return await UpdateReservationActions.returnReservationAction(reservationId, includeInactive);
+  try {
+    return await UpdateReservationActions.returnReservationAction(reservationId, includeInactive);
+  } catch (error) {
+    return error;
+  }
 }
 
 export async function softDeleteReservation(reservationId: string) {
-  return await DeleteReservationActions.softDeleteReservationAction(reservationId);
+  try {
+    return await DeleteReservationActions.softDeleteReservationAction(reservationId);
+  } catch (error) {
+    return error;
+  }
 }
 
 export async function checkPermissions(user: User, targetUserId: Schema.Types.ObjectId, permission: string): Promise<boolean> {
-  return user.permissions.includes(permission) || user.userId.toString() === targetUserId.toString();
+    return user.permissions.includes(permission) || user.userId.toString() === targetUserId.toString();
 }
