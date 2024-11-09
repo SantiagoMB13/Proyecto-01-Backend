@@ -3,20 +3,42 @@ import * as ReadBookAction from './read.book.action';
 import * as UpdateBookAction from './update.book.action';
 import * as DeleteBookAction from './delete.book.action';
 
+function filterAndCleanReservations(book: any) {
+  const bookObject = book.toObject();
+  const { isActive, ...bookWithoutIsActive } = bookObject;
+  
+  if (bookWithoutIsActive.reservationHistory) {
+    bookWithoutIsActive.reservationHistory = bookWithoutIsActive.reservationHistory
+      .filter((reservation: any) => reservation.isActive)
+      .map((reservation: any) => {
+        const { _id, isActive, ...reservationWithoutIsActive } = reservation;
+        return reservationWithoutIsActive;
+      });
+  }
+  
+  return bookWithoutIsActive;
+}
+
 export async function softDeleteBook(bookId: string) {
-  return await DeleteBookAction.softDeleteBookAction(bookId);
+  const result = await DeleteBookAction.softDeleteBookAction(bookId);
+  if (!result) return null;
+  return filterAndCleanReservations(result);
 }
 
 export async function createBook(bookData: any) {
-  return await CreateBookAction.createBookAction(bookData);
+  const result = await CreateBookAction.createBookAction(bookData);
+  return filterAndCleanReservations(result);
 }
 
 export async function getBooks(queries: any, includeInactive: boolean) {
-  return await ReadBookAction.getBooksAction(queries, includeInactive);
+  const books = await ReadBookAction.getBooksAction(queries, includeInactive);
+  return books.map(book => filterAndCleanReservations(book));
 }
 
 export async function getBook(bookId: string, includeInactive: boolean) {
-  return await ReadBookAction.getBookAction(bookId, includeInactive);
+  const book = await ReadBookAction.getBookAction(bookId, includeInactive);
+  if (!book) return null;
+  return filterAndCleanReservations(book);
 }
 
 export async function updateBook(bookId: string, updateData: any, userPermissions: string[]) {
@@ -29,5 +51,7 @@ export async function updateBook(bookId: string, updateData: any, userPermission
     throw new Error('Insufficient permissions');
   }
 
-  return await UpdateBookAction.updateBookAction(bookId, updateData);
+  const result = await UpdateBookAction.updateBookAction(bookId, updateData);
+  if (!result) return null;
+  return filterAndCleanReservations(result);
 }
