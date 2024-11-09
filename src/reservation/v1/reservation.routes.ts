@@ -11,8 +11,9 @@ async function CreateReservation(req: AuthRequest, res: Response) {
   try {
     const userId = req.user!.userId;
     const bodyUserId = req.body.userId;
+    const user = req.user!;
 
-    if (bodyUserId && !await controller.checkPermissions(req.user!, bodyUserId, 'createReservations')) {
+    if (bodyUserId && !(user.permissions.includes('createReservations') || userId.toString() === bodyUserId.toString())) {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
 
@@ -36,6 +37,7 @@ async function CreateReservation(req: AuthRequest, res: Response) {
 async function GetReservations(req: AuthRequest, res: Response) {
   try {
     const userId = req.user!.userId;
+    const user = req.user!;
     const includeInactive = req.query.includeInactive === 'true';
     const queries = { ...req.query };
     delete queries.includeInactive;
@@ -44,7 +46,8 @@ async function GetReservations(req: AuthRequest, res: Response) {
       if (!req.user!.permissions.includes('readReservations')) {
         queries.userId = userId.toString();
       }
-    } else if (!await controller.checkPermissions(req.user!, new Schema.Types.ObjectId(req.query.userId as string), 'readReservations')) {
+    } else if (!(user.permissions.includes('readReservations') || userId.toString() === req.query.userId.toString())) {
+             
       return res.status(403).json({ message: "Insufficient permissions" });
     }
 
@@ -65,13 +68,15 @@ async function GetReservation(req: AuthRequest, res: Response) {
   try {
     const reservationId = req.params.id;
     const includeInactive = req.query.includeInactive === 'true';
+    const user = req.user!;
+    const userId = user.userId;
     
     const reservation = await controller.getReservation(reservationId, includeInactive);
     if (!reservation) {
       return res.status(404).json({ message: "Reservation not found" });
     }
 
-    if (!await controller.checkPermissions(req.user!, reservation.userId, 'readReservations')) {
+    if (!(user.permissions.includes('readReservations') || userId.toString() === reservation.userId.toString())) {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
 
@@ -91,13 +96,15 @@ async function UpdateReservation(req: AuthRequest, res: Response) {
   try {
     const reservationId = req.params.id;
     const includeInactive = req.query.includeInactive === 'true';
+    const user = req.user!;
+    const userId = user.userId;
     
     const existingReservation = await controller.getReservation(reservationId, includeInactive);
     if (!existingReservation) {
       return res.status(404).json({ message: "Reservation not found" });
     }
 
-    if (!await controller.checkPermissions(req.user!, existingReservation.userId, 'updateReservations')) {
+    if (!(user.permissions.includes('updateReservations') || userId.toString() === existingReservation.userId.toString())) {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
 
@@ -121,13 +128,15 @@ async function ReturnReservation(req: AuthRequest, res: Response) {
   try {
     const reservationId = req.params.id;
     const includeInactive = req.query.includeInactive === 'true';
+    const user = req.user!;
+    const userId = user.userId;
     
     const existingReservation = await controller.getReservation(reservationId, includeInactive);
     if (!existingReservation) {
       return res.status(404).json({ message: "Reservation not found or already returned" });
     }
 
-    if (!await controller.checkPermissions(req.user!, existingReservation.userId, 'deleteReservations')) {
+    if (!(user.permissions.includes('deleteReservations') || userId.toString() === existingReservation.userId.toString())) {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
 
@@ -150,13 +159,15 @@ async function ReturnReservation(req: AuthRequest, res: Response) {
 async function DeleteReservation(req: AuthRequest, res: Response) {
   try {
     const reservationId = req.params.id;
+    const user = req.user!;
+    const userId = user.userId;
     
     const existingReservation = await controller.getReservation(reservationId, true);
     if (!existingReservation) {
       return res.status(404).json({ message: "Reservation not found" });
     }
 
-    if (!await controller.checkPermissions(req.user!, existingReservation.userId, 'updateReservations')) {
+    if (!(user.permissions.includes('updateReservations') || userId.toString() === existingReservation.userId.toString())) {
       return res.status(403).json({ message: "Insufficient permissions" });
     }
 

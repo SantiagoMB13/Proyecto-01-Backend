@@ -49,7 +49,3 @@ export async function softDeleteReservation(reservationId: string) {
     return error;
   }
 }
-
-export async function checkPermissions(user: User, targetUserId: Schema.Types.ObjectId, permission: string): Promise<boolean> {
-    return user.permissions.includes(permission) || user.userId.toString() === targetUserId.toString();
-}
